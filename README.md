@@ -1,2 +1,2 @@
 # bazel-guacamole
-bazel rules for 
+bazel rules for guacamole-server
