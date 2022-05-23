@@ -1,0 +1,202 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake", "configure_make")
+
+cmake(
+    name = "libz",
+    lib_source = "@cc_zlib//:all_srcs",
+)
+
+cmake(
+    name = "liblzo2",
+    lib_source = "@cc_lzo//:all_srcs",
+)
+
+cmake(
+    name = "libssh2",
+    cache_entries = {
+        "OPENSSL_INCLUDE_DIR": "$EXT_BUILD_DEPS/openssl/include",
+        "OPENSSL_LIBRARIES": "$EXT_BUILD_DEPS/openssl/lib",
+        "OPENSSL_ROOT_DIR": "$EXT_BUILD_DEPS/openssl",
+        "BUILD_EXAMPLES": "OFF",
+        "BUILD_TESTING": "OFF",
+    },
+    lib_source = "@cc_ssh2//:all_srcs",
+    out_data_dirs = [
+        "include",
+        "lib/pkgconfig",
+    ],
+    out_static_libs = [
+        "libssh2.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":openssl",
+    ],
+)
+
+configure_make(
+    name = "libcairo",
+    autogen = True,
+    configure_in_place = True,
+    configure_options = [
+        "--disable-xlib",
+    ],
+    copts = [
+        "-DCAIRO_HAS_PTHREAD=1",
+    ],
+    env = select({
+        "@platforms//os:macos": {
+            "AR": "",
+        },
+        "//conditions:default": {},
+    }),
+    lib_source = "@cc_cairo//:all_srcs",
+    linkopts = [
+        "-lpthread",
+    ],
+    out_static_libs = [
+        "libcairo.a",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+configure_make(
+    name = "libuuid",
+    args = [
+        "man all",
+    ],
+    autogen = True,
+    autoreconf = True,
+    autoreconf_options = ["--install"],
+    configure_in_place = True,
+    env = select({
+        "@platforms//os:macos": {
+            "AR": "",
+        },
+        "//conditions:default": {},
+    }),
+    lib_source = "@cc_uuid//:all_srcs",
+    out_static_libs = [
+        "libuuid.a",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+configure_make(
+    name = "openssl",
+    configure_command = "config",
+    env = select({
+        "@platforms//os:macos": {
+            "AR": "",
+        },
+        "//conditions:default": {},
+    }),
+    lib_source = "@cc_openssl//:all_srcs",
+    out_static_libs = [
+        "libssl.a",
+        "libcrypto.a",
+    ],
+    # configure_options = [
+    #     "no-shared",
+    # ],
+    visibility = ["//visibility:public"],
+)
+
+configure_make(
+    name = "libgcrypt",
+    autogen = True,
+    configure_in_place = True,
+    configure_options = [
+        "--enable-static",
+        "--disable-shared",
+    ],
+    env = select({
+        "@platforms//os:macos": {
+            "AR": "",
+        },
+        "//conditions:default": {},
+    }),
+    lib_source = "@cc_libgcrypt//:all",
+)
+
+cmake(
+    name = "libpng",
+    generate_args = [
+        # Avoiding "PNG_ARM_NEON_FILE undefined: no support for run-time ARM NEON checks" on arm64
+        "-DPNG_ARM_NEON=off",
+    ],
+    lib_source = "@cc_libpng//:all_srcs",
+    out_static_libs = [
+        "libpng.a",
+    ],
+    tags = [
+        "local",
+        "no-sandbox",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":liblzo2",
+        ":libz",
+    ],
+)
+
+configure_make(
+    name = "libjpeg",
+    configure_options = [
+        "--enable-static",
+        "--disable-shared",
+    ],
+    env = {
+        "AR": "",
+    },
+    lib_source = "@cc_libjpeg//:all_srcs",
+    visibility = ["//visibility:public"],
+)
+
+cmake(
+    name = "libvnc",
+    generate_args = [
+        "-DWITH_SASL=OFF",
+        "-DWITH_EXAMPLES=OFF",
+        "-DWITH_TESTS=OFF",
+        "-DWITH_WEBSOCKETS=OFF",
+        "-DBUILD_SHARED_LIBS=OFF",
+    ],
+    lib_source = "@cc_libvnc//:all_srcs",
+    out_data_dirs = [
+        "lib/pkgconfig",
+    ],
+    out_static_libs = [
+        "libvncserver.a",
+        "libvncclient.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":libjpeg",
+        ":liblzo2",
+        ":libpng",
+        ":libz",
+    ],
+)
+
+cmake(
+    name = "libfreerdp",
+    cache_entries = {
+        "OPENSSL_INCLUDE_DIR": "$EXT_BUILD_DEPS/openssl/include",
+        "OPENSSL_LIBRARIES": "$EXT_BUILD_DEPS/openssl/lib",
+        "OPENSSL_ROOT_DIR": "$EXT_BUILD_DEPS/openssl",
+        "CHANNEL_URBDRC": "OFF",
+        "CHANNEL_URBDRC_CLIENT": "OFF",
+        "BUILD_TESTING": "OFF",
+        "WITH_PULSE": "OFF",
+        "BUILD_SHARED_LIBS": "OFF",
+    },
+    # defines = ["TARGET_OS_IPHONE", "TARGET_OS_WATCH"],
+    lib_source = "@cc_freerdp//:all_srcs",
+    out_static_libs = [
+        "libfreerdp-client2.a",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":openssl",
+    ],
+)

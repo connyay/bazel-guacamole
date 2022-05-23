@@ -1,0 +1,52 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake", "configure_make")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/connyay/bazel-guacamole
+gazelle(name = "gazelle")
+
+configure_make(
+    name = "guacamole",
+    autoreconf = True,
+    autoreconf_options = ["--install"],
+    configure_in_place = True,
+    configure_options = [
+        "--disable-guacd",
+        "--disable-guaclog",
+        "--with-ssl",
+        "--with-rdp",
+        "--with-vnc",
+        # "--with-ssh",
+        # "--with-terminal",
+    ],
+    copts = [
+        "-Wno-newline-eof",
+        "-Wno-implicit-function-declaration",
+        "-Wno-undef-prefix",
+        "-Wno-incompatible-function-pointer-types",
+        "-Wgnu-folding-constant",
+    ],
+    env = select({
+        "@platforms//os:macos": {
+            "AR": "",
+        },
+        "//conditions:default": {},
+    }),
+    lib_source = "@cc_guacamole_server//:all_srcs",
+    out_static_libs = [
+        "libguac.a",
+        "libguac-client-rdp.a",
+        "libguac-client-vnc.a",
+        # "libguac-client-ssh.a"
+    ],
+    deps = [
+        "//libs:libcairo",
+        "//libs:libfreerdp",
+        "//libs:libjpeg",
+        "//libs:libpng",
+        "//libs:libssh2",
+        "//libs:libuuid",
+        "//libs:libvnc",
+        "//libs:openssl",
+    ],
+    visibility = ["//visibility:public"],
+)

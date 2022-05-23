@@ -1,0 +1,26 @@
+diff --git a/configure.ac b/configure.ac
+index 624aae13..8aa9eb22 100644
+--- configure.ac
++++ configure.ac
+@@ -501,7 +501,7 @@ AC_ARG_WITH([vnc],
+ if test "x$with_vnc" != "xno"
+ then
+     have_libvncserver=yes
+-    AC_CHECK_LIB([vncclient], [rfbInitClient], [VNC_LIBS="$VNC_LIBS -lvncclient"], [have_libvncserver=no])
++    # AC_CHECK_LIB([vncclient], [rfbInitClient], [VNC_LIBS="$VNC_LIBS -lvncclient"], [have_libvncserver=no])
+ fi
+ 
+ #
+@@ -913,9 +913,9 @@ if test "x$with_ssh" != "xno"
+ then
+     have_libssh2=yes
+ 
+-    AC_CHECK_LIB([ssh2], [libssh2_userauth_publickey_frommemory],
+-                         [SSH_LIBS="$SSH_LIBS -lssh2"],
+-                         [have_libssh2=no])
++    # AC_CHECK_LIB([ssh2], [libssh2_userauth_publickey_frommemory],
++    #                      [SSH_LIBS="$SSH_LIBS -lssh2"],
++    #                      [have_libssh2=no])
+ fi
+ 
+ AM_CONDITIONAL([ENABLE_COMMON_SSH], [test "x${have_libssh2}"  = "xyes" \
